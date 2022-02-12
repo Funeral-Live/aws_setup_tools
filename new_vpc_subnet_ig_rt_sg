@@ -1,0 +1,139 @@
+#!/bin/bash
+
+#Step 1: Create a VPC.
+
+## Create a VPC
+AWS_VPC_ID=$(aws ec2 create-vpc \
+--cidr-block 10.10.0.0/16 \
+--query 'Vpc.{VpcId:VpcId}' \
+--output text)
+
+#Step 2: Modify your custom VPC and enable DNS hostname.
+
+## Enable DNS hostname for your VPC
+aws ec2 modify-vpc-attribute \
+--vpc-id $AWS_VPC_ID \
+--enable-dns-hostnames "{\"Value\":true}"
+
+#Step 3: Create a subnet.
+
+## Create a public subnet
+AWS_SUBNET_PUBLIC_ID=$(aws ec2 create-subnet \
+--vpc-id $AWS_VPC_ID --cidr-block 10.10.10.0/24 \
+--availability-zone us-east-1a --query 'Subnet.{SubnetId:SubnetId}' \
+--output text)
+
+#Step 4: Enable Auto-assign Public IP on the subnet.
+
+## Enable Auto-assign Public IP on Public Subnet
+aws ec2 modify-subnet-attribute \
+--subnet-id $AWS_SUBNET_PUBLIC_ID \
+--map-public-ip-on-launch
+
+#Step 5: Create an Internet Gateway.
+
+## Create an Internet Gateway
+AWS_INTERNET_GATEWAY_ID=$(aws ec2 create-internet-gateway \
+--query 'InternetGateway.{InternetGatewayId:InternetGatewayId}' \
+--output text)
+
+#Step 6: Attach the Internet gateway to your VPC.
+
+## Attach Internet gateway to your VPC
+aws ec2 attach-internet-gateway \
+--vpc-id $AWS_VPC_ID \
+--internet-gateway-id $AWS_INTERNET_GATEWAY_ID
+
+#Step 7: Create a custom route table.
+
+## Create a route table
+AWS_CUSTOM_ROUTE_TABLE_ID=$(aws ec2 create-route-table \
+--vpc-id $AWS_VPC_ID \
+--query 'RouteTable.{RouteTableId:RouteTableId}' \
+--output text )
+
+#Step 8: Create a route to Internet Gateway in your custom route table.
+
+## Create route to Internet Gateway
+aws ec2 create-route \
+--route-table-id $AWS_CUSTOM_ROUTE_TABLE_ID \
+--destination-cidr-block 0.0.0.0/0 \
+--gateway-id $AWS_INTERNET_GATEWAY_ID
+
+#Step 9: Associate the subnet with route table, making it a public subnet.
+
+## Associate the public subnet with route table
+AWS_ROUTE_TABLE_ASSOID=$(aws ec2 associate-route-table  \
+--subnet-id $AWS_SUBNET_PUBLIC_ID \
+--route-table-id $AWS_CUSTOM_ROUTE_TABLE_ID \
+--output text)
+
+#Step 10: Create a custom security group.
+
+## Create a security group
+aws ec2 create-security-group \
+--vpc-id $AWS_VPC_ID \
+--group-name myvpc-security-group \
+--description 'My VPC non default security group'
+
+#Step 11: Get security group ID’s.
+
+## Get security group ID's
+AWS_DEFAULT_SECURITY_GROUP_ID=$(aws ec2 describe-security-groups \
+--filters "Name=vpc-id,Values=$AWS_VPC_ID" \
+--query 'SecurityGroups[?GroupName == `default`].GroupId' \
+--output text) &&
+AWS_CUSTOM_SECURITY_GROUP_ID=$(aws ec2 describe-security-groups \
+--filters "Name=vpc-id,Values=$AWS_VPC_ID" \
+--query 'SecurityGroups[?GroupName == `myvpc-security-group`].GroupId' \
+--output text)
+
+#Step 12: Create ingress rules for your custom security group.
+
+## Create security group ingress rules
+aws ec2 authorize-security-group-ingress \
+--group-id $AWS_CUSTOM_SECURITY_GROUP_ID \
+--ip-permissions '[{"IpProtocol": "udp", "FromPort": 1194, "ToPort": 1194, "IpRanges": [{"CidrIp": "0.0.0.0/0", "Description": "Allow HTTP"}]}]'
+
+
+#Step 13: Add tags to the resources in your VPC.
+
+## Add a tag to the VPC
+aws ec2 create-tags \
+--resources $AWS_VPC_ID \
+--tags "Key=Name,Value=myvpc"
+
+## Add a tag to public subnet
+aws ec2 create-tags \
+--resources $AWS_SUBNET_PUBLIC_ID \
+--tags "Key=Name,Value=myvpc-public-subnet"
+
+## Add a tag to the Internet-Gateway
+aws ec2 create-tags \
+--resources $AWS_INTERNET_GATEWAY_ID \
+--tags "Key=Name,Value=myvpc-internet-gateway"
+
+## Add a tag to the default route table
+AWS_DEFAULT_ROUTE_TABLE_ID=$(aws ec2 describe-route-tables \
+--filters "Name=vpc-id,Values=$AWS_VPC_ID" \
+--query 'RouteTables[?Associations[0].Main != `flase`].RouteTableId' \
+--output text) &&
+aws ec2 create-tags \
+--resources $AWS_DEFAULT_ROUTE_TABLE_ID \
+--tags "Key=Name,Value=myvpc-default-route-table"
+
+## Add a tag to the public route table
+aws ec2 create-tags \
+--resources $AWS_CUSTOM_ROUTE_TABLE_ID \
+--tags "Key=Name,Value=myvpc-public-route-table"
+
+## Add a tags to security groups
+aws ec2 create-tags \
+--resources $AWS_CUSTOM_SECURITY_GROUP_ID \
+--tags "Key=Name,Value=myvpc-security-group" &&
+aws ec2 create-tags \
+--resources $AWS_DEFAULT_SECURITY_GROUP_ID \
+--tags "Key=Name,Value=myvpc-default-security-group"
+
+#Step 14: Printing variables.
+
