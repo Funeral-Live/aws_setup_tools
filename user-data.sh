@@ -68,6 +68,6 @@ echo iroute 172.16.$i.0 255.255.255.0 > vpnuser-$b
 done
 
 systemctl restart openvpn@server
-
+systemctl status openvpn@server
 #
 #End Script
