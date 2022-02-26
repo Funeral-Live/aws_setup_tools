@@ -5,6 +5,7 @@ yum -y install openvpn
  
 mkdir -p /var/log/openvpn
 mkdir /etc/openvpn/ccd
+mkdir /etc/scripts
 
 groupadd nogroup
 useradd nogroup -g nogroup
