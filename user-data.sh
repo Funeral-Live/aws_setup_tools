@@ -10,6 +10,12 @@ mkdir /etc/scripts
 groupadd nogroup
 useradd nogroup -g nogroup
 
+cd /etc/scripts/
+wget https://github.com/Funeral-Live/aws_setup_tools/raw/main/start-streaming.sh
+wget https://github.com/Funeral-Live/aws_setup_tools/raw/main/stop-streaming.sh
+chmod +x start-streaming.sh
+chmod +x stop-streaming.sh
+
 cd /etc/openvpn/server/
 wget https://github.com/Funeral-Live/aws_setup_tools/raw/main/openssl.cnf
 wget https://github.com/Funeral-Live/aws_setup_tools/raw/main/generate-key.sh
@@ -18,12 +24,6 @@ chmod +x generate-key.sh
 
 cd /etc/openvpn/
 wget https://github.com/Funeral-Live/aws_setup_tools/raw/main/server.conf
-
-cd /etc/scripts/
-wget https://github.com/Funeral-Live/aws_setup_tools/raw/main/start-streaming.sh
-wget https://github.com/Funeral-Live/aws_setup_tools/raw/main/stop-streaming.sh
-chmod +x start-streaming.sh
-chmod +x stop-streaming.sh
 
 systemctl start openvpn@server
 systemctl enable openvpn@server
