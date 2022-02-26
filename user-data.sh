@@ -11,8 +11,8 @@ groupadd nogroup
 useradd nogroup -g nogroup
 
 cd /etc/scripts/
-wget https://github.com/Funeral-Live/aws_setup_tools/raw/main/start-streaming.sh
-wget https://github.com/Funeral-Live/aws_setup_tools/raw/main/stop-streaming.sh
+sudo wget https://github.com/Funeral-Live/aws_setup_tools/raw/main/start-streaming.sh
+sudo wget https://github.com/Funeral-Live/aws_setup_tools/raw/main/stop-streaming.sh
 chmod +x start-streaming.sh
 chmod +x stop-streaming.sh
 
