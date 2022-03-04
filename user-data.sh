@@ -75,6 +75,10 @@ echo iroute 172.16.$i.0 255.255.255.0 > vpnuser-$b
 done
 
 systemctl restart openvpn@server
-systemctl status openvpn@server
+#systemctl status openvpn@server
+#
+#Install gstreamer
+yum -y install http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm
+yum -y install gstreamer-devel gstreamer-plugins-base-tools gstreamer-plugins-base-devel gstreamer-plugins-good gstreamer-plugins-bad gstreamer-plugins-bad gstreamer-plugins-good
 #
 #End Script
