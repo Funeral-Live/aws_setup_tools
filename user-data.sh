@@ -1,13 +1,12 @@
 #!/bin/bash
-yum update -y
-amazon-linux-extras install epel -y
-yum -y install openvpn
+apt update -y
+apt install openvpn -y
  
 mkdir -p /var/log/openvpn
 mkdir /etc/openvpn/ccd
 mkdir /etc/scripts
 
-groupadd nogroup
+#groupadd nogroup
 useradd nogroup -g nogroup
 
 cd /etc/scripts/
@@ -34,11 +33,6 @@ systemctl enable openvpn@server
 echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
 sysctl -p
 
-# Make Iptables rules persistent (after reboots)
-yum install -y iptables-services
-systemctl enable iptables
-service iptables start
-
 # You will may have to change eth0 to the interface name that you have
 iptables -F
 iptables -t nat -F
@@ -46,7 +40,11 @@ iptables -A FORWARD -i eth0 -o tun0 -m state --state ESTABLISHED,RELATED -j ACCE
 iptables -A FORWARD -s 10.10.20.0/24 -o eth0 -j ACCEPT
 iptables -t nat -A POSTROUTING -s 10.10.20.0/24 ! -d 10.10.20.0/24 -o eth0 -j MASQUERADE
 
-service iptables save
+#Make IPtables rules persistent (after reboots)
+echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo debconf-set-selections
+echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo debconf-set-selections
+apt -y install iptables-persistent
+iptables-save > /etc/iptables/rules.v4
 
 #Create bulk vpn users:
 
@@ -62,7 +60,6 @@ newusers vpn_users.txt
 
 #Add remote Mikrotik LAN CIDR by each user:
 
-#!/bin/bash
 cd /etc/openvpn/ccd
 
 i=1
@@ -78,7 +75,5 @@ systemctl restart openvpn@server
 #systemctl status openvpn@server
 #
 #Install gstreamer
-#yum -y install http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm
-#yum -y install gstreamer-devel gstreamer-plugins-base-tools gstreamer-plugins-base-devel gstreamer-plugins-good gstreamer-plugins-bad gstreamer-plugins-bad gstreamer-plugins-good
-#
+apt install libgstreamer1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio -y
 #End Script
