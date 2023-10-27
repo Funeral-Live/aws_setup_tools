@@ -12,7 +12,7 @@ chmod +x stop-streaming.sh
 #Install and configure wireguard
 sudo apt update
 sudo apt install wireguard -y
-sudo cd /etc/wireguard
+cd /etc/wireguard
 wg genkey | sudo tee /etc/wireguard/private.key
 sudo chmod go= /etc/wireguard/private.key
 privkey=$(cat /etc/wireguard/private.key)
