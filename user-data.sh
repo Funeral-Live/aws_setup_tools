@@ -1,5 +1,7 @@
 #!/bin/bash
 
+mkdir /etc/scripts/
+
 #streaming script
 cd /etc/scripts/
 sudo wget https://github.com/Funeral-Live/aws_setup_tools/raw/main/start-streaming.sh
